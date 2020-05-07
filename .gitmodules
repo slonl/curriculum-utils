@@ -1,0 +1,24 @@
+[submodule "curriculum-doelen"]
+	path = curriculum-doelen
+	url = https://github.com/slonl/curriculum-doelen.git
+[submodule "curriculum-inhouden"]
+	path = curriculum-inhouden
+	url = https://github.com/slonl/curriculum-inhouden.git
+[submodule "curriculum-kerndoelen"]
+	path = curriculum-kerndoelen
+	url = https://github.com/slonl/curriculum-kerndoelen.git
+[submodule "curriculum-examenprogramma"]
+	path = curriculum-examenprogramma
+	url = https://github.com/slonl/curriculum-examenprogramma.git
+[submodule "curriculum-examenprogramma-bg"]
+	path = curriculum-examenprogramma-bg
+	url = https://github.com/slonl/curriculum-examenprogramma-bg.git
+[submodule "curriculum-syllabus"]
+	path = curriculum-syllabus
+	url = https://github.com/slonl/curriculum-syllabus.git
+[submodule "curriculum-leerdoelenkaarten"]
+	path = curriculum-leerdoelenkaarten
+	url = https://github.com/slonl/curriculum-leerdoelenkaarten.git
+[submodule "curriculum-doelgroepteksten"]
+	path = curriculum-doelgroepteksten
+	url = https://github.com/slonl/curriculum-doelgroepteksten.git
