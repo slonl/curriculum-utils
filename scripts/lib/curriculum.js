@@ -2,25 +2,50 @@
 var curriculum = module.exports = {};
 
 	curriculum.data    = {};
-	curriculum.ids     = {};
-	curriculum.types   = {};
+	curriculum.index   = {
+		id: {},
+		type: {},
+		schema: {}
+	};
 	curriculum.schemas = [];
-
-	curriculum.add = function(section, object) 
-	{
+	curriculum.schema  = {};
+	
+	curriculum.uuid = function() {
 		const uuidv4 = require('uuid/v4');
+		return uuidv4();
+	}
+	
+	curriculum.add = function(schemaName, section, object) 
+	{
 		if (!object.id) {
-			object.id = uuidv4();
+			object.id = curriculum.uuid();
 		}
 //		console.log('add: '+object.id+' in '+section);
 //		console.log(JSON.stringify(object));
 		object.unreleased = true;
 		curriculum.data[section].push(object);
-		curriculum.ids[object.id] = object;
-		curriculum.types[object.id] = section;
+		curriculum.schema[schemaName][scetion].push(object);
+		curriculum.index.id[object.id] = object;
+		curriculum.index.type[object.id] = section;
+		curriculum.index.schema[object.id] = schemaName;
 		return object.id;
 	}
 
+	curriculum.deprecate = function(entity, replacedBy) {
+		var currentSection = curriculum.index.type[entity.id];
+		if (!currentSection) {
+			throw new Error('entity '+entity.id+' is not part of any schema');
+		}
+
+		if (entity.unreleased) {
+			// just remove it
+			delete curriculum.index.id[entity.id];
+			delete curriculum.index.type[entity.id];
+			delete curriculum.index.schema[entity.id];
+		} else {
+			curriculum.replace(entity.id, replacedBy);
+		}
+	}
 
 	curriculum.update = function(section, id, diff)
 	{
@@ -28,8 +53,8 @@ var curriculum = module.exports = {};
 		const jsondiffpatch = require('jsondiffpatch');
 //		console.log('update: '+id);
 //		console.log(JSON.stringify(diff));
-		var entity = curriculum.ids[id];
-		var clone = curriculum.clone(entity);
+		var entity = curriculum.index.id[id];
+		var clone  = curriculum.clone(entity);
 		jsondiffpatch.patch(clone, diff);
 		// check if entity must be deprecated
 		// if so check that clone.id is not entity.id
@@ -45,7 +70,7 @@ var curriculum = module.exports = {};
 				clone.id = uuidv4();
 			}
 			curriculum.add(section, clone);
-			curriculum.replace(section, entity.id, clone.id);
+			curriculum.replace(entity.id, clone.id);
 		} else {
 			// no need to deprecate entity, just update its contents
 			if (clone.id!=entity.id) {
@@ -62,12 +87,15 @@ var curriculum = module.exports = {};
 	 * add replacedBy in old entity
 	 * add replaces in new entity
 	 */
-	curriculum.replace = function(section, id, newId, ...ids) 
+	curriculum.replace = function(id, newId) 
 	{
-//		console.log('replace: '+id+' with '+newId+' in '+section);
-//		console.log('replacedBy: '+JSON.stringify(ids.concat([newId])));
-		var newObject = curriculum.ids[newId];
-		var oldObject = curriculum.ids[id];
+		var section    = curriculum.index.type[id];
+		var schemaName = curriculum.index.schema[entity.id];
+		if (!Array.isArray(curriculum.schema[schemaName][section])) {
+			throw new Error(section+' is not part of schema '+schemaName);
+		}
+		var newObject  = curriculum.index.id[newId];
+		var oldObject  = curriculum.index.id[id];
 
 		if (!oldObject.unreleased) {
 			if (!newObject.replaces) {
@@ -75,15 +103,10 @@ var curriculum = module.exports = {};
 			}
 			newObject.replaces.push(id);
 			
-			// unfreeze object so we can deprecate it
-			oldObject = curriculum.clone(oldObject);
 			if (!oldObject.replacedBy) {
 				oldObject.replacedBy = [];
 			}
-			oldObject.replacedBy = oldObject.replacedBy.concat(ids.concat([newId]));
-		}
-		if (!newObject.unreleased) {
-			throw new Error('replace can only replace with unreleased objects');
+			oldObject.replacedBy = oldObject.replacedBy.push(newId);
 		}
 		
 		if (!oldObject.types) {
@@ -91,14 +114,25 @@ var curriculum = module.exports = {};
 		}
 		oldObject.types.push(section);
 
-		curriculum.data[section] = curriculum.data[section].filter(function(entity) {
-			return entity.id != id;
+		// remove item from current section
+		var index = curriculum.data[section].findIndex(function(e) {
+			return e.id == entity.id;
 		});
+		if (index<0) {
+			throw new Error('could not find entity '+entity.id+' in section '+section);
+		}
+		curriculum.data[section].splice(index, 1);
+
+		var index = curriculum.schema[schemaName][section].findIndex(function(e) {
+			return e.id == entity.id;
+		});
+		curriculum.schema[schemaName][section].splice(index, 1);
 
 		if (!oldObject.unreleased) {
-			if (curriculum.types[oldObject.id]!='deprecated') {
+			if (curriculum.index.type[oldObject.id]!='deprecated') {
 				curriculum.data.deprecated.push(oldObject);
-				curriculum.types[oldObject.id] = 'deprecated';
+				curriculum.schema[schemaName].deprecated.push(oldObject);
+				curriculum.index.type[oldObject.id] = 'deprecated';
 			}
 		}
 
@@ -129,16 +163,13 @@ var curriculum = module.exports = {};
 				{
 //					console.log('replacing links in '+entity.id+' '+property+' from '+id+' to '+newId);
 					var index = entity[property].indexOf(id);
-					if (entity.unreleased) {
+					if (!entity.unreleased) {
+						entity.dirty = true;
+					}
+					if (newId) {
 						entity[property].splice(index, 1, newId);
 					} else {
-						// create new object clone
-						var newObject = curriculum.clone(entity);
-						// splice the link
-						newObject[property].splice(index, 1, newId);
-						// replace entity with clone
-						var newObjectId = curriculum.add(section, newObject);
-						curriculum.replace(section, entity.id, newObjectId);
+						entity[property].splice(index, 1);
 					}
 				}
 			);
@@ -169,40 +200,42 @@ var curriculum = module.exports = {};
 		return section+'_id';
 	}
 
-	curriculum.loadSchema = function(name, dir='') {
+	curriculum.loadSchema = function(schemaName, dir='') {
 		var fs = require('fs');
-		var context = fs.readFileSync(name,'utf-8')
+		var context = fs.readFileSync(schemaName,'utf-8')
 		var schema = JSON.parse(context);
 		curriculum.schemas.push(schema);
-
+		curriculum.schema[schemaName] = {};
 		var properties = Object.keys(schema.properties);
 		properties.forEach(function(propertyName) {
 			if (typeof schema.properties[propertyName]['#file'] != 'undefined') {
 				var file = schema.properties[propertyName]['#file'];
 				var fileData = fs.readFileSync(dir+file, 'utf-8');
-					console.log(propertyName+': reading '+dir+file);
-					curriculum.data[propertyName] = JSON.parse(fileData);
-					if (typeof curriculum.data[propertyName] == 'undefined') {
-						console.log(propertyName+' not parsed correctly');
-					} else if (typeof curriculum.data[propertyName].length == 'undefined') {
-						console.log(propertyName+' has no length');
-					} else {
-						console.log(curriculum.data[propertyName].length + ' items found');
-					}
-					curriculum.data[propertyName].forEach(function(entity) {
-						if (entity.id) {
-							if (curriculum.ids[entity.id]) {
-								console.log('Duplicate id in '+propertyName+': '+entity.id,
-									curriculum.ids[entity.id], entity);
-							} else {
-								curriculum.ids[entity.id] = entity;
-								curriculum.types[entity.id] = propertyName;
-							}
-							if (typeof entity.unreleased == 'undefined') {
-								Object.freeze(entity);
-							}
+				console.log(propertyName+': reading '+dir+file);
+				curriculum.data[propertyName] = JSON.parse(fileData);
+				curriculum.schema[schemaName][propertyName] = curriculum.data[propertyName];				
+				if (typeof curriculum.data[propertyName] == 'undefined') {
+					console.log(propertyName+' not parsed correctly');
+				} else if (typeof curriculum.data[propertyName].length == 'undefined') {
+					console.log(propertyName+' has no length');
+				} else {
+					console.log(curriculum.data[propertyName].length + ' items found');
+				}
+				curriculum.data[propertyName].forEach(function(entity) {
+					if (entity.id) {
+						if (curriculum.index.id[entity.id]) {
+							console.log('Duplicate id in '+propertyName+': '+entity.id,
+								curriculum.index.id[entity.id], entity);
+						} else {
+							curriculum.index.id[entity.id] = entity;
+							curriculum.index.type[entity.id] = propertyName;
+							curriculum.index.schema[entity.id] = schemaName;
 						}
-					});
+						if (typeof entity.unreleased == 'undefined') {
+							// Object.freeze(entity);
+						}
+					}
+				});
 			} else {
 				console.log('skipping '+propertyName);
 			}
@@ -217,7 +250,7 @@ var curriculum = module.exports = {};
 		properties.forEach(function(propertyName) {
 			if (typeof schema.properties[propertyName]['#file'] != 'undefined') {
 				var file = schema.properties[propertyName]['#file'];
-				var fileData = JSON.stringify(curriculum.data[propertyName], null, "\t");
+				var fileData = JSON.stringify(curriculum.schema[name][propertyName], null, "\t");
 				fs.writeFileSync(dir+file, fileData);
 			}
 		});
@@ -228,3 +261,14 @@ var curriculum = module.exports = {};
 		return JSON.parse(JSON.stringify(object));
 	}
 
+	curriculum.getDirty = function()
+	{
+		var dirty = [];
+		Object.keys(curriculum.index.id).forEach(function(id) {
+			if (curriculum.index.id[id].dirty && !curriculum.index.id[id].unreleased) {
+				dirty.push(curriculum.index.id[id]);
+			}
+		});
+		return dirty;
+	}
+	

@@ -18,3 +18,45 @@
     	schemas[context] = curriculum.loadSchema('curriculum-'+context+'/context.json', 'curriculum-'+context+'/');
     });
     
+
+    // search for all deleted entities
+    // and move them to deprecated
+    // and remove them from all other entities
+    // and mark those as dirty, unless unreleased
+    curriculum.index.ids.filter(function(entity) {
+        return !!entity.deleted;
+    }).forEach(function(entity) {
+        delete entity.deleted;
+        curriculum.deprecate(entity);
+    });
+
+    // search for all dirty entities, that are not unreleased
+    // get the last released version (rest api? master branch?)
+    // put that version in deprecated
+    // create new uuid for dirty entity, mark unreleased
+    // search for all references to old uuid
+    // replace those references
+    // mark containing entity dirty (unless unreleased)
+    var dirty;
+    while (dirty = curriculum.getDirty()) {
+        dirty.forEach(function(entity) {
+            var section      = curriculum.index.type[entity.id];
+            var schemaName   = curriculum.index.schema[entity.id];
+            var cleanVersion = getClean(entity);
+            var clone        = curriculum.clone(entity);
+            clone.id = curriculum.uuid();
+            delete clone.dirty;
+
+            curriculum.index.id[entity.id] = cleanVersion;
+            curriculum.add(schemaName, section, clone);
+
+            curriculum.replace(entity.id, clone.id);
+        });
+    }
+
+    // repeat untill no more dirty entities are found
+
+    // search for all unreleased entities
+    // remove unreleased
+
+
