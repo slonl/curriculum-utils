@@ -1,4 +1,5 @@
     var curriculum = require('lib/curriculum.js');
+    var masterCurriculum = require('lib/curriculum.js');
 
     var contexts = [
     	'doelen',
@@ -15,9 +16,13 @@
 
     var schemas = {};
     contexts.forEach(function(context) {
-    	schemas[context] = curriculum.loadSchema('curriculum-'+context+'/context.json', 'curriculum-'+context+'/');
+        schemas[context] = curriculum.loadSchema('curriculum-'+context+'/context.json', 'curriculum-'+context+'/');
+        masterCurriculum.loadSchema('master/curriculum-'+context+'/context.json','master/curriculum-'+context+'/');
     });
-    
+
+    function getClean(entityId) {
+        return masterCurriculum.index.id(entityId);
+    }
 
     // search for all deleted entities
     // and move them to deprecated
@@ -42,7 +47,7 @@
         dirty.forEach(function(entity) {
             var section      = curriculum.index.type[entity.id];
             var schemaName   = curriculum.index.schema[entity.id];
-            var cleanVersion = getClean(entity);
+            var cleanVersion = getClean(entity.id);
             var clone        = curriculum.clone(entity);
             clone.id = curriculum.uuid();
             delete clone.dirty;
@@ -53,10 +58,16 @@
             curriculum.replace(entity.id, clone.id);
         });
     }
-
     // repeat untill no more dirty entities are found
 
     // search for all unreleased entities
     // remove unreleased
+    Object.keys(curriculum.index.id).filter(function(id) {
+        return curriculum.index.id[id].unreleased;
+    }).forEach(function(id) {
+        delete curriculum.index.id[id].unreleased;
+    });
 
-
+    contexts.forEach(function(context) {
+        curriculum.exportFiles(schemas[context], 'curriculum-'+context+'/');
+    });

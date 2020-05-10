@@ -22,3 +22,27 @@
 [submodule "curriculum-doelgroepteksten"]
 	path = curriculum-doelgroepteksten
 	url = https://github.com/slonl/curriculum-doelgroepteksten.git
+[submodule "master/curriculum-doelen"]
+	path = master/curriculum-doelen
+	url = https://github.com/slonl/curriculum-doelen.git
+[submodule "master/curriculum-kerndoelen"]
+	path = master/curriculum-kerndoelen
+	url = https://github.com/slonl/curriculum-kerndoelen.git
+[submodule "master/curriculum-examenprogramma"]
+	path = master/curriculum-examenprogramma
+	url = https://github.com/slonl/curriculum-examenprogramma.git
+[submodule "master/curriculum-examenprogramma-bg"]
+	path = master/curriculum-examenprogramma-bg
+	url = https://github.com/slonl/curriculum-examenprogramma-bg.git
+[submodule "master/curriculum-syllabus"]
+	path = master/curriculum-syllabus
+	url = https://github.com/slonl/curriculum-syllabus.git
+[submodule "master/curriculum-leerdoelenkaarten"]
+	path = master/curriculum-leerdoelenkaarten
+	url = https://github.com/slonl/curriculum-leerdoelenkaarten.git
+[submodule "master/curriculum-doelgroepteksten"]
+	path = master/curriculum-doelgroepteksten
+	url = https://github.com/slonl/curriculum-doelgroepteksten.git
+[submodule "master/curriculum-inhouden"]
+	path = master/curriculum-inhouden
+	url = https://github.com/slonl/curriculum-inhouden.git
