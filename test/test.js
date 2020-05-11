@@ -10,15 +10,16 @@
         validate: function(schema, data, parentSchema, dataPath, parentData, propertyName, rootData) {
             var matches = /.*\#\/definitions\/(.*)/g.exec(schema);
             if (matches) {
-                var result = curriculum.types[data] == matches[1];
+                var result = curriculum.index.type[data] == matches[1];
                 return result;
             }
             console.log('Unknown #ref definition: '+schema);
         }
     });
 
-    var curriculum = require('../scripts/lib/curriculum.js');
-
+    var curriculumLib = require('../scripts/lib/curriculum.js');
+    var curriculum = curriculumLib.create();
+    
     var contexts = [
     	'doelen',
     	'inhouden',
