@@ -1,60 +1,73 @@
 "use strict";
-var curriculum = module.exports = {};
 
-	curriculum.data    = {};
-	curriculum.index   = {
-		id: {},
-		type: {},
-		schema: {}
+	module.exports = {
+		create: function() {
+			return new Curriculum();
+		}
 	};
-	curriculum.schemas = [];
-	curriculum.schema  = {};
-	
-	curriculum.uuid = function() {
+
+	function Curriculum() {
+		this.data    = {};
+		this.index   = {
+			id: {},
+			type: {},
+			schema: {}
+		};
+		this.schemas = [];
+		this.schema  = {};
+	}
+
+	Curriculum.prototype.uuid = function() {
 		const uuidv4 = require('uuid/v4');
 		return uuidv4();
 	}
 	
-	curriculum.add = function(schemaName, section, object) 
+	Curriculum.prototype.add = function(schemaName, section, object) 
 	{
 		if (!object.id) {
-			object.id = curriculum.uuid();
+			object.id = this.uuid();
+		}
+		if (section == 'deprecated') {
+			throw new Error('You cannot add to deprecated, use the deprecate function instead');
 		}
 //		console.log('add: '+object.id+' in '+section);
 //		console.log(JSON.stringify(object));
 		object.unreleased = true;
-		curriculum.data[section].push(object);
-		curriculum.schema[schemaName][scetion].push(object);
-		curriculum.index.id[object.id] = object;
-		curriculum.index.type[object.id] = section;
-		curriculum.index.schema[object.id] = schemaName;
+		this.data[section].push(object);
+		this.schema[schemaName][section].push(object);
+		this.index.id[object.id] = object;
+		this.index.type[object.id] = section;
+		this.index.schema[object.id] = schemaName;
 		return object.id;
 	}
 
-	curriculum.deprecate = function(entity, replacedBy) {
-		var currentSection = curriculum.index.type[entity.id];
+	Curriculum.prototype.deprecate = function(entity, replacedBy) {
+		var currentSection = this.index.type[entity.id];
 		if (!currentSection) {
 			throw new Error('entity '+entity.id+' is not part of any schema');
 		}
 
 		if (entity.unreleased) {
 			// just remove it
-			delete curriculum.index.id[entity.id];
-			delete curriculum.index.type[entity.id];
-			delete curriculum.index.schema[entity.id];
+			delete this.index.id[entity.id];
+			delete this.index.type[entity.id];
+			delete this.index.schema[entity.id];
 		} else {
-			curriculum.replace(entity.id, replacedBy);
+			this.replace(entity.id, replacedBy);
 		}
 	}
 
-	curriculum.update = function(section, id, diff)
+	Curriculum.prototype.update = function(section, id, diff)
 	{
 		const uuidv4 = require('uuid/v4');
 		const jsondiffpatch = require('jsondiffpatch');
 //		console.log('update: '+id);
 //		console.log(JSON.stringify(diff));
-		var entity = curriculum.index.id[id];
-		var clone  = curriculum.clone(entity);
+		if (section == 'deprecated') {
+			throw new Error('You cannot update deprecated entities');
+		}
+		var entity = this.index.id[id];
+		var clone  = this.clone(entity);
 		jsondiffpatch.patch(clone, diff);
 		// check if entity must be deprecated
 		// if so check that clone.id is not entity.id
@@ -69,8 +82,8 @@ var curriculum = module.exports = {};
 			if (clone.id == entity.id) {
 				clone.id = uuidv4();
 			}
-			curriculum.add(section, clone);
-			curriculum.replace(entity.id, clone.id);
+			this.add(section, clone);
+			this.replace(entity.id, clone.id);
 		} else {
 			// no need to deprecate entity, just update its contents
 			if (clone.id!=entity.id) {
@@ -87,61 +100,73 @@ var curriculum = module.exports = {};
 	 * add replacedBy in old entity
 	 * add replaces in new entity
 	 */
-	curriculum.replace = function(id, newId) 
+	Curriculum.prototype.replace = function(id, newId) 
 	{
-		var section    = curriculum.index.type[id];
-		var schemaName = curriculum.index.schema[entity.id];
-		if (!Array.isArray(curriculum.schema[schemaName][section])) {
+		var self = this;
+		var oldObject  = this.index.id[id];
+		var section    = this.index.type[id];
+		if (section == 'deprecated') {
+			// don't change anything thats already deprecated
+			return;
+		}
+		var schemaName = this.index.schema[id];
+		if (!Array.isArray(this.schema[schemaName][section])) {
 			throw new Error(section+' is not part of schema '+schemaName);
 		}
-		var newObject  = curriculum.index.id[newId];
-		var oldObject  = curriculum.index.id[id];
-
+		if (newId) {
+			var newObject  = this.index.id[newId];
+		}
+		if (!oldObject) {
+			console.log('Could not find entity with id '+id+' to replace');
+			die();
+		}
 		if (!oldObject.unreleased) {
-			if (!newObject.replaces) {
-				newObject.replaces = [];
+			if (newObject) {
+				if (!newObject.replaces) {
+					newObject.replaces = [];
+				}
+				newObject.replaces.push(id);
 			}
-			newObject.replaces.push(id);
-			
 			if (!oldObject.replacedBy) {
 				oldObject.replacedBy = [];
 			}
-			oldObject.replacedBy = oldObject.replacedBy.push(newId);
+			if (newId) {
+				oldObject.replacedBy = oldObject.replacedBy.push(newId);
+			}
 		}
 		
 		if (!oldObject.types) {
 			oldObject.types = [];
 		}
 		oldObject.types.push(section);
+		oldObject.types = [...new Set(oldObject.types)];
 
 		// remove item from current section
-		var index = curriculum.data[section].findIndex(function(e) {
-			return e.id == entity.id;
+		this.data[section] = this.data[section].filter(function(e) {
+			return e.id != oldObject.id;
 		});
-		if (index<0) {
-			throw new Error('could not find entity '+entity.id+' in section '+section);
-		}
-		curriculum.data[section].splice(index, 1);
 
-		var index = curriculum.schema[schemaName][section].findIndex(function(e) {
-			return e.id == entity.id;
+		this.schema[schemaName][section] = this.schema[schemaName][section].filter(function(e) {
+			return e.id != oldObject.id;
 		});
-		curriculum.schema[schemaName][section].splice(index, 1);
 
 		if (!oldObject.unreleased) {
-			if (curriculum.index.type[oldObject.id]!='deprecated') {
-				curriculum.data.deprecated.push(oldObject);
-				curriculum.schema[schemaName].deprecated.push(oldObject);
-				curriculum.index.type[oldObject.id] = 'deprecated';
+			if (this.index.type[oldObject.id]!='deprecated') {
+				this.data.deprecated.push(oldObject);
+				if (!this.schema[schemaName].deprecated) {
+					console.log('schema '+schemaName+' missing deprecated');
+				}
+				this.schema[schemaName].deprecated.push(oldObject);
+				this.index.type[oldObject.id] = 'deprecated';
 			}
 		}
 
-		var parentSections = curriculum.getParentSections(section);
-		var parentProperty = curriculum.getParentProperty(section);
+		var parentSections = this.getParentSections(section);
+		var parentProperty = this.getParentProperty(section);
 //		console.log('replacing links for '+section+' '+id, parentSections);
 		if (parentSections.length) {
 			parentSections.forEach(function(parentSection) {
-				curriculum.replaceLinks(parentSection, parentProperty, id, newId);
+				self.replaceLinks(parentSection, parentProperty, id, newId);
 			});
 //			console.log('replacing links done for '+section+' '+id);
 		} else {
@@ -149,10 +174,14 @@ var curriculum = module.exports = {};
 		}
 	}
 
-	curriculum.replaceLinks = function(section, property, id, newId)
+	Curriculum.prototype.replaceLinks = function(section, property, id, newId)
 	{
-		if (section) {
-			curriculum.data[section].filter(
+		if (section == 'deprecated') {
+			throw new Error('You cannot modify deprecated entities');
+		}
+		if (section && this.data[section]) {
+			console.log('replaceLinks for '+id+' to '+newId);
+			this.data[section].filter(
 				function(entity) 
 				{
 					return entity[property] 
@@ -173,19 +202,22 @@ var curriculum = module.exports = {};
 					}
 				}
 			);
+		} else {
+			console.log('replaceLinks called for undefined section '+section);
 		}
 	}
 
-	curriculum.getParentSections = function(section) 
+	Curriculum.prototype.getParentSections = function(section) 
 	{
 		var parentSections = [];
-		var parentProperty = curriculum.getParentProperty(section);
-		curriculum.schemas.forEach(function(schema) {
+		var parentProperty = this.getParentProperty(section);
+		this.schemas.forEach(function(schema) {
 			Object.keys(schema.definitions).forEach(
 				function(schemaSection) 
 				{
 					if (typeof schema.definitions[schemaSection].properties != 'undefined' 
 						&& typeof schema.definitions[schemaSection].properties[parentProperty] != 'undefined'
+						&& schemaSection != 'deprecated'
 					) {
 						parentSections.push(schemaSection);
 					}
@@ -195,41 +227,42 @@ var curriculum = module.exports = {};
 		return parentSections;
 	}
 
-	curriculum.getParentProperty = function(section) 
+	Curriculum.prototype.getParentProperty = function(section) 
 	{
 		return section+'_id';
 	}
 
-	curriculum.loadSchema = function(schemaName, dir='') {
+	Curriculum.prototype.loadSchema = function(schemaName, dir='') {
 		var fs = require('fs');
 		var context = fs.readFileSync(schemaName,'utf-8')
 		var schema = JSON.parse(context);
-		curriculum.schemas.push(schema);
-		curriculum.schema[schemaName] = {};
+		this.schemas.push(schema);
+		this.schema[schemaName] = {};
 		var properties = Object.keys(schema.properties);
+		var self = this;
 		properties.forEach(function(propertyName) {
 			if (typeof schema.properties[propertyName]['#file'] != 'undefined') {
 				var file = schema.properties[propertyName]['#file'];
 				var fileData = fs.readFileSync(dir+file, 'utf-8');
 				console.log(propertyName+': reading '+dir+file);
-				curriculum.data[propertyName] = JSON.parse(fileData);
-				curriculum.schema[schemaName][propertyName] = curriculum.data[propertyName];				
-				if (typeof curriculum.data[propertyName] == 'undefined') {
+				self.data[propertyName] = JSON.parse(fileData);
+				self.schema[schemaName][propertyName] = self.data[propertyName];				
+				if (typeof self.data[propertyName] == 'undefined') {
 					console.log(propertyName+' not parsed correctly');
-				} else if (typeof curriculum.data[propertyName].length == 'undefined') {
+				} else if (typeof self.data[propertyName].length == 'undefined') {
 					console.log(propertyName+' has no length');
 				} else {
-					console.log(curriculum.data[propertyName].length + ' items found');
+					console.log(self.data[propertyName].length + ' items found');
 				}
-				curriculum.data[propertyName].forEach(function(entity) {
+				self.data[propertyName].forEach(function(entity) {
 					if (entity.id) {
-						if (curriculum.index.id[entity.id]) {
+						if (self.index.id[entity.id]) {
 							console.log('Duplicate id in '+propertyName+': '+entity.id,
-								curriculum.index.id[entity.id], entity);
+								self.index.id[entity.id], entity);
 						} else {
-							curriculum.index.id[entity.id] = entity;
-							curriculum.index.type[entity.id] = propertyName;
-							curriculum.index.schema[entity.id] = schemaName;
+							self.index.id[entity.id] = entity;
+							self.index.type[entity.id] = propertyName;
+							self.index.schema[entity.id] = schemaName;
 						}
 						if (typeof entity.unreleased == 'undefined') {
 							// Object.freeze(entity);
@@ -243,30 +276,37 @@ var curriculum = module.exports = {};
 		return schema;
 	}
 
-	curriculum.exportFiles = function(schema, dir='')
+	Curriculum.prototype.exportFiles = function(schema, schemaName, dir='')
 	{
-		var fs = require('fs');
+		const fs    = require('fs');
 		var properties = Object.keys(schema.properties);
+		var self = this;
+		
+
 		properties.forEach(function(propertyName) {
 			if (typeof schema.properties[propertyName]['#file'] != 'undefined') {
 				var file = schema.properties[propertyName]['#file'];
-				var fileData = JSON.stringify(curriculum.schema[name][propertyName], null, "\t");
+				var fileData = JSON.stringify(self.schema[schemaName][propertyName], null, "\t").replace(/\//g, '\\/');
+				if (!fs.existsSync(dir+'data/')) {
+					fs.mkdirSync(dir+'data/', { recursive: true});
+				}
 				fs.writeFileSync(dir+file, fileData);
 			}
 		});
 	}
 
-	curriculum.clone = function(object)
+	Curriculum.prototype.clone = function(object)
 	{
 		return JSON.parse(JSON.stringify(object));
 	}
 
-	curriculum.getDirty = function()
+	Curriculum.prototype.getDirty = function()
 	{
 		var dirty = [];
-		Object.keys(curriculum.index.id).forEach(function(id) {
-			if (curriculum.index.id[id].dirty && !curriculum.index.id[id].unreleased) {
-				dirty.push(curriculum.index.id[id]);
+		var self = this;
+		Object.keys(this.index.id).forEach(function(id) {
+			if (self.index.id[id].dirty && !self.index.id[id].unreleased) {
+				dirty.push(self.index.id[id]);
 			}
 		});
 		return dirty;
