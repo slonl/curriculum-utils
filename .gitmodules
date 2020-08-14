@@ -1,9 +1,9 @@
-[submodule "curriculum-doelen"]
-	path = curriculum-doelen
-	url = https://github.com/slonl/curriculum-doelen.git
-[submodule "curriculum-inhouden"]
-	path = curriculum-inhouden
-	url = https://github.com/slonl/curriculum-inhouden.git
+[submodule "curriculum-basis"]
+	path = curriculum-basis
+	url = https://github.com/slonl/curriculum-basis.git
+[submodule "curriculum-lpib"]
+	path = curriculum-lpib
+	url = https://github.com/slonl/curriculum-lpib.git
 [submodule "curriculum-kerndoelen"]
 	path = curriculum-kerndoelen
 	url = https://github.com/slonl/curriculum-kerndoelen.git
@@ -22,9 +22,9 @@
 [submodule "curriculum-doelgroepteksten"]
 	path = curriculum-doelgroepteksten
 	url = https://github.com/slonl/curriculum-doelgroepteksten.git
-[submodule "master/curriculum-doelen"]
-	path = master/curriculum-doelen
-	url = https://github.com/slonl/curriculum-doelen.git
+[submodule "master/curriculum-basis"]
+	path = master/curriculum-basis
+	url = https://github.com/slonl/curriculum-basis.git
 [submodule "master/curriculum-kerndoelen"]
 	path = master/curriculum-kerndoelen
 	url = https://github.com/slonl/curriculum-kerndoelen.git
@@ -43,6 +43,6 @@
 [submodule "master/curriculum-doelgroepteksten"]
 	path = master/curriculum-doelgroepteksten
 	url = https://github.com/slonl/curriculum-doelgroepteksten.git
-[submodule "master/curriculum-inhouden"]
-	path = master/curriculum-inhouden
-	url = https://github.com/slonl/curriculum-inhouden.git
+[submodule "master/curriculum-lpib"]
+	path = master/curriculum-lpib
+	url = https://github.com/slonl/curriculum-lpib.git
