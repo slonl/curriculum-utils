@@ -4,7 +4,8 @@
   "description": "Curriculum Utilities and Scripts",
   "scripts": {
     "test": "node test/test.js",
-    "release": "node scripts/release.js"
+    "release": "node scripts/release.js",
+    "repl": "NODE_REPL_HISTORY=.repl_history && node scripts/repl.js"
   },
   "author": "SLO",
   "license": "MIT",
