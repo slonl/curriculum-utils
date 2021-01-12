@@ -21,8 +21,8 @@
     var curriculum = curriculumLib.create();
     
     var contexts = [
-    	'doelen',
-    	'inhouden',
+    	'basis',
+    	'lpib',
     	'kerndoelen',
     	'examenprogramma',
     	'examenprogramma-bg',
