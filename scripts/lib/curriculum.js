@@ -11,7 +11,8 @@
 		this.index   = {
 			id: {},
 			type: {},
-			schema: {}
+			schema: {},
+			references: {}
 		};
 		this.schemas = [];
 		this.schema  = {};
@@ -20,6 +21,23 @@
 	Curriculum.prototype.uuid = function() {
 		const uuidv4 = require('uuid/v4');
 		return uuidv4();
+	}
+
+	Curriculum.prototype.updateReferences = function(object) {
+		var self = this;
+		Object.keys(object).forEach(k => {
+			if (Array.isArray(object[k]) 
+				&& ( k.substr(k.length-3)=='_id'
+					|| k=='replaces')
+			) {
+				object[k].forEach(id => {
+					if (!self.index.references[id]) {
+						self.index.references[id] = [];
+					}
+					self.index.references[id].push(object.id);
+				});
+			}
+		});
 	}
 	
 	Curriculum.prototype.add = function(schemaName, section, object) 
@@ -38,6 +56,7 @@
 		this.index.id[object.id] = object;
 		this.index.type[object.id] = section;
 		this.index.schema[object.id] = schemaName;
+		this.updateReferences(object);
 		return object.id;
 	}
 
@@ -91,6 +110,7 @@
 			}
 			entity = jsondiffpatch.patch(entity, diff);
 		}
+		this.updateReferences(entity);
 		return entity.id;
 	}
 
@@ -263,6 +283,7 @@
 							self.index.id[entity.id] = entity;
 							self.index.type[entity.id] = propertyName;
 							self.index.schema[entity.id] = schemaName;
+							self.updateReferences(entity);
 						}
 						if (typeof entity.unreleased == 'undefined') {
 							// Object.freeze(entity);
