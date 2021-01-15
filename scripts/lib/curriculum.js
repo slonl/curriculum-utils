@@ -28,7 +28,8 @@
 		Object.keys(object).forEach(k => {
 			if (Array.isArray(object[k]) 
 				&& ( k.substr(k.length-3)=='_id'
-					|| k=='replaces')
+					|| k=='replaces'
+					|| k=='replacedBy')
 			) {
 				object[k].forEach(id => {
 					if (!self.index.references[id]) {
@@ -36,6 +37,14 @@
 					}
 					self.index.references[id].push(object.id);
 				});
+			} else if (k.substr(k.length-3)=='_id'
+				&& typeof object[k]=='string'
+			) {
+				var id = object[k];
+				if (!self.index.references[id]) {
+					self.index.references[id] = [];
+				}
+				self.index.references[id].push(object.id);
 			}
 		});
 	}
@@ -307,7 +316,7 @@
 		properties.forEach(function(propertyName) {
 			if (typeof schema.properties[propertyName]['#file'] != 'undefined') {
 				var file = schema.properties[propertyName]['#file'];
-				var fileData = JSON.stringify(self.schema[schemaName][propertyName], null, "\t").replace(/\//g, '\\/');
+				var fileData = JSON.stringify(self.schema[schemaName][propertyName], null, "\t");//.replace(/\//g, '\\/');
 				if (!fs.existsSync(dir+'data/')) {
 					fs.mkdirSync(dir+'data/', { recursive: true});
 				}
