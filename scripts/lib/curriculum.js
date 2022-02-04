@@ -7,14 +7,46 @@
 	};
 
 	function Curriculum() {
+		/**
+		 * Contains entities by type
+		 */
 		this.data    = {};
+
 		this.index   = {
+			/**
+			 * All entities by id
+			 */
 			id: {},
+
+			/**
+			 * Type by id
+			 */
 			type: {},
+
+			/**
+			 * Schema by id
+			 */
 			schema: {},
-			references: {}
+
+			/**
+			 * References to other entities by id
+			 */
+			references: {},
+
+			/**
+			 * Seperate index of all deprecated entities
+			 */
+			deprecated: {}
 		};
+
+		/**
+		 * An array of all the schemas as json
+		 */
 		this.schemas = [];
+
+		/**
+		 * The schemas by schema name
+		 */
 		this.schema  = {};
 	}
 
@@ -28,8 +60,8 @@
 		Object.keys(object).forEach(k => {
 			if (Array.isArray(object[k]) 
 				&& ( k.substr(k.length-3)=='_id'
-					|| k=='replaces'
-					|| k=='replacedBy')
+					/*|| k=='replaces'
+					|| k=='replacedBy' */)
 			) {
 				object[k].forEach(id => {
 					if (!self.index.references[id]) {
@@ -293,6 +325,9 @@
 							self.index.type[entity.id] = propertyName;
 							self.index.schema[entity.id] = schemaName;
 							self.updateReferences(entity);
+							if (/deprecated/.exec(propertyName)!==null) {
+								self.index.deprecated[entity.id] = entity;
+							}
 						}
 						if (typeof entity.unreleased == 'undefined') {
 							// Object.freeze(entity);
