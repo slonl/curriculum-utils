@@ -60,6 +60,8 @@ toBeDeleted.forEach(e => {
 				dnErrorCount++;
 				//console.error('dn '+dnId+' not found, referenced in '+e.id);
 			} else {
+				//FIXME: check that doelniveau isn't referenced by other entities, which aren't deleted or deprecated
+				// or do this in a seperate stage after this on
 				toBeDeleted.push(dn);
 				countByType.doelniveau++;
 				if (dn.doel_id) {
@@ -72,6 +74,7 @@ toBeDeleted.forEach(e => {
 						if (!doel) {
 							//console.error('doel '+doelId+' not found, referenced in '+dn.id);
 						} else {
+							//FIXME: add the same check as for doelniveau references here as well
 							toBeDeleted.push(doel);
 							countByType.doel++;
 						}
@@ -88,6 +91,8 @@ toBeDeleted.forEach(e => e.deleted=1)
 // now check that all toBeDeleted entities have no references other than entities that are also deleted or deprecated
 let refCount = 0;
 seen = {};
+
+let skipList = {};
 
 toBeDeleted.forEach(e => {
 	let refs = curriculum.index.references[e.id];
@@ -113,13 +118,26 @@ toBeDeleted.forEach(e => {
 					seen[ref]=1;
 					refCount++;
 					console.log(e.id+' still has a link from '+ref+' ('+curriculum.index.type[ref]+')')
+					skipList[e.id]=true;
 				}
 			}
 		}
 	})
 })
 
-console.log(toBeDeleted.length+' entities to be deleted');
+toBeDeleted.forEach(e => {
+	if (!skipList[e.id]) {
+		e.deleted = 1;
+	}
+});
+
+console.log(refCount+' entities found with still relevant references');
+console.log((toBeDeleted.length-refCount)+' entities to be deleted');
 console.log(dnErrorCount+' missing doelniveaus');
 console.log(countByType)
 console.log(refCount+' lingering references');
+
+['lpib','basis'].forEach(function(context) {
+    console.log('exporting '+context+' to curriculum-'+context+'/');
+    curriculum.exportFiles(schemas[context], schemaNames[context], 'curriculum-'+context+'/');
+});
