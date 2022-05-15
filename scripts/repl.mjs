@@ -1,8 +1,8 @@
-    const repl = require('repl');
-    var curriculumLib = require('./lib/curriculum.js');
+    import Curriculum from 'curriculum-js';
+    import repl from 'repl';
 
-    var curriculum = curriculumLib.create();
-    var masterCurriculum = curriculumLib.create();
+    var curriculum = new Curriculum();
+    var masterCurriculum = new Curriculum();
 
     var contexts = [
     	'basis',
@@ -21,13 +21,14 @@
     var schemaNames = {};
     contexts.forEach(function(context) {
         schemaNames[context] = 'curriculum-'+context+'/context.json';
-        schemas[context] = curriculum.loadSchema('curriculum-'+context+'/context.json', 'curriculum-'+context+'/');
-        masterCurriculum.loadSchema('master/curriculum-'+context+'/context.json','master/curriculum-'+context+'/');
+        schemas[context] = curriculum.loadContextFromFile('curriculum-'+context, 'curriculum-'+context+'/context.json' );
+        masterCurriculum.loadContextFromFile('curriculum-'+context, 'master/curriculum-'+context+'/context.json');
     });
 
     var server = repl.start({
         ignoreUndefined: true
     });
+
     server.context.curriculum = curriculum;
     if (process.env.NODE_REPL_HISTORY) {
         server.setupHistory(process.env.NODE_REPL_HISTORY, (e) => { if (e) console.log(e); } );

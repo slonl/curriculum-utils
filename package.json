@@ -3,16 +3,13 @@
   "version": "1.0.0",
   "description": "Curriculum Utilities and Scripts",
   "scripts": {
-    "test": "node test/test.js",
-    "release": "node scripts/release.js",
-    "repl": "NODE_REPL_HISTORY=.repl_history && node scripts/repl.js"
+    "test": "node test/test.mjs",
+    "release": "node scripts/release.mjs",
+    "repl": "NODE_REPL_HISTORY=.repl_history && node scripts/repl.mjs"
   },
   "author": "SLO",
   "license": "MIT",
   "dependencies": {
-    "ajv": "^6.5.5",
-    "jsesc": "^3.0.1",
-    "jsondiffpatch": "^0.3.11",
-    "uuid": "^3.3.2"
+    "curriculum-js": "^0.1.3"
   }
 }
