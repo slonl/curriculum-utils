@@ -2,7 +2,7 @@ import Curriculum from 'curriculum-js'
 
 async function validate() {
 
-	var editorCurriculum = new Curriculum()
+	var masterCurriculum = new Curriculum()
 	var schemas = [
 		'basis',
 		'kerndoelen',
@@ -10,15 +10,15 @@ async function validate() {
 		'examenprogramma-bg',
 		'syllabus',
 		'leerdoelenkaarten',
-    	'doelgroepteksten',
+		'doelgroepteksten',
 		'erk',
 		'inhoudslijnen'
 	]
 
 	let loadedSchemas = schemas.map(
-		schema => editorCurriculum.loadContextFromFile(
+		schema => masterCurriculum.loadContextFromFile(
 			'curriculum-'+schema, 
-			'./editor/curriculum-'+schema+'/context.json'
+			'./master/curriculum-'+schema+'/context.json'
 		)
 	)
 
@@ -29,7 +29,7 @@ async function validate() {
 
 		schemas.forEach(async (schema, index) => {
 			try {
-				let result = await editorCurriculum.validate(loadedSchemas[index])
+				let result = await masterCurriculum.validate(loadedSchemas[index])
 				console.log(schema+': Data is valid!')
 			} catch(error) {
 				if (error.validationErrors && Array.isArray(error.validationErrors)) {
@@ -37,7 +37,7 @@ async function validate() {
 						console.log(schema+': '+error.instancePath+': '+error.message)
 					})
 				} else {
-					console.log(schema,error)
+					console.log(schema, error.validationErrors)
 				}
 			}
 		})

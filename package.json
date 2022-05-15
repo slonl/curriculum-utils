@@ -4,6 +4,7 @@
   "description": "Curriculum Utilities and Scripts",
   "scripts": {
     "test": "node test/test.mjs",
+    "test-release": "node test/test-release.mjs",
     "release": "node scripts/release.mjs",
     "repl": "NODE_REPL_HISTORY=.repl_history && node scripts/repl.mjs"
   },
