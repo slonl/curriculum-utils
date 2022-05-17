@@ -13,7 +13,8 @@
     	'leerdoelenkaarten',
     	'doelgroepteksten',
 	'erk',
-	'inhoudslijnen'
+	'inhoudslijnen',
+	'niveauhierarchie'
     ];
 
     var schemaBaseURL  = 'https://opendata.slo.nl/curriculum/schemas/';

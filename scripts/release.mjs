@@ -14,7 +14,8 @@ async function release() {
     	'leerdoelenkaarten',
     	'doelgroepteksten',
         'erk',
-        'inhoudslijnen'
+        'inhoudslijnen',
+	'niveauhierarchie'
     ];
 
     let loadedSchemas = schemas.map(
