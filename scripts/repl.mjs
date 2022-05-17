@@ -6,13 +6,14 @@
 
     var contexts = [
     	'basis',
-    	'lpib',
     	'kerndoelen',
     	'examenprogramma',
     	'examenprogramma-bg',
     	'syllabus',
     	'leerdoelenkaarten',
-    	'doelgroepteksten'
+    	'doelgroepteksten',
+	'erk',
+	'inhoudslijnen'
     ];
 
     var schemaBaseURL  = 'https://opendata.slo.nl/curriculum/schemas/';
@@ -21,7 +22,7 @@
     var schemaNames = {};
     contexts.forEach(function(context) {
         schemaNames[context] = 'curriculum-'+context+'/context.json';
-        schemas[context] = curriculum.loadContextFromFile('curriculum-'+context, 'curriculum-'+context+'/context.json' );
+        schemas[context] = curriculum.loadContextFromFile('curriculum-'+context, 'editor/curriculum-'+context+'/context.json' );
         masterCurriculum.loadContextFromFile('curriculum-'+context, 'master/curriculum-'+context+'/context.json');
     });
 
