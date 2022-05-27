@@ -11,6 +11,6 @@
   "author": "SLO",
   "license": "MIT",
   "dependencies": {
-    "curriculum-js": "^0.2.1"
+    "curriculum-js": "^0.3.1"
   }
 }
