@@ -1,33 +1,24 @@
 import Curriculum from 'curriculum-js'
+// load node filesystem support
+import fs from 'fs'
 
 async function release() {
 
-    var editorCurriculum = new Curriculum()
-    var masterCurriculum = new Curriculum()
+    // create new curriculum instances
+    const curriculum = new Curriculum()
+    const masterCurriculum = new Curriculum()
 
-    var schemas = [
-    	'basis',
-    	'kerndoelen',
-    	'examenprogramma',
-    	'examenprogramma-bg',
-    	'syllabus',
-    	'leerdoelenkaarten',
-    	'doelgroepteksten',
-        'erk',
-        'inhoudslijnen',
-	'niveauhierarchie'
-    ];
+    // read the list of all contexts from the file /curriculum-contexts.txt
+    const schemas = fs.readFileSync('curriculum-contexts.txt','utf8')
+        .split(/\n/g)             // split the file on newlines
+        .map(line => line.trim()) // remove leading and trailing whitespace
+        .filter(Boolean)          // filter empty lines
 
+    // load all contexts from the editor/ and master/ folders
     let loadedSchemas = schemas.map(
-        schema => editorCurriculum.loadContextFromFile(
-            'curriculum-'+schema, 
-            './editor/curriculum-'+schema+'/context.json'
-        )
+        schema => curriculum.loadContextFromFile(schema, './editor/'+schema+'/context.json')
     ).concat(schemas.map(
-        schema => masterCurriculum.loadContextFromFile(
-            'curriculum-'+schema, 
-            './master/curriculum-'+schema+'/context.json'
-        )
+        schema => masterCurriculum.loadContextFromFile(schema, './master/'+schema+'/context.json')
     ))
 
     Promise.allSettled(loadedSchemas).then((settledSchemas) => {

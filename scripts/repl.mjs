@@ -1,39 +1,47 @@
-    import Curriculum from 'curriculum-js';
-    import repl from 'repl';
+// load the curriculum-js library
+import Curriculum from 'curriculum-js'
+// load node filesystem support
+import fs from 'fs'
+import repl from 'repl';
 
-    var curriculum = new Curriculum();
-    var masterCurriculum = new Curriculum();
+// create an async function, so we can use await inside it
+async function main() {
 
-    var contexts = [
-    	'basis',
-    	'kerndoelen',
-    	'examenprogramma',
-    	'examenprogramma-bg',
-    	'syllabus',
-    	'leerdoelenkaarten',
-    	'doelgroepteksten',
-	'erk',
-	'inhoudslijnen',
-	'niveauhierarchie'
-    ];
+    // create new curriculum instance
+    const curriculum = new Curriculum()
+    const masterCurriculum = new Curriculum()
 
-    var schemaBaseURL  = 'https://opendata.slo.nl/curriculum/schemas/';
+    // read the list of all contexts from the file /curriculum-contexts.txt
+    const schemas = fs.readFileSync('curriculum-contexts.txt','utf8')
+        .split(/\n/g)             // split the file on newlines
+        .map(line => line.trim()) // remove leading and trailing whitespace
+        .filter(Boolean)          // filter empty lines
 
-    var schemas = {};
-    var schemaNames = {};
-    contexts.forEach(function(context) {
-        schemaNames[context] = 'curriculum-'+context+'/context.json';
-        schemas[context] = curriculum.loadContextFromFile('curriculum-'+context, 'editor/curriculum-'+context+'/context.json' );
-        masterCurriculum.loadContextFromFile('curriculum-'+context, 'master/curriculum-'+context+'/context.json');
-    });
+    // load all contexts from the editor/ and master/ folders
+    let loadedSchemas = schemas.map(
+        schema => curriculum.loadContextFromFile(schema, './editor/'+schema+'/context.json')
+    ).concat(schemas.map(
+        schema => masterCurriculum.loadContextFromFile(schema, './master/'+schema+'/context.json')
+    ))
 
-    var server = repl.start({
-        ignoreUndefined: true
-    });
+    // wait untill all contexts have been loaded, and return the promise values as schemas
+    Promise.allSettled(loadedSchemas).then((settledSchemas) => {
+        loadedSchemas = settledSchemas.map(promise => promise.value)
+    })
+    .then(() => {
 
-    server.context.curriculum = curriculum;
-    if (process.env.NODE_REPL_HISTORY) {
-        server.setupHistory(process.env.NODE_REPL_HISTORY, (e) => { if (e) console.log(e); } );
-    } else {
-        console.log('Set environment variable NODE_REPL_HISTORY=.repl_history to enable persistent REPL history');
-    }
+        var server = repl.start({
+            ignoreUndefined: true
+        });
+
+        server.context.curriculum = curriculum;
+        if (process.env.NODE_REPL_HISTORY) {
+            server.setupHistory(process.env.NODE_REPL_HISTORY, (e) => { if (e) console.log(e); } );
+        } else {
+            console.log('Set environment variable NODE_REPL_HISTORY=.repl_history to enable persistent REPL history');
+        }
+
+    })
+}
+
+main()

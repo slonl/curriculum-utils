@@ -1,24 +1,15 @@
 import Curriculum from 'curriculum-js'
+import fs from 'fs'
 
 async function validate() {
 
-	var editorCurriculum = new Curriculum()
-	var schemas = [
-		'basis',
-		'kerndoelen',
-		'examenprogramma',
-		'examenprogramma-bg',
-		'syllabus',
-		'leerdoelenkaarten',
-    	'doelgroepteksten',
-		'erk',
-		'inhoudslijnen'
-	]
+	const editorCurriculum = new Curriculum()
+	const schemas = fs.readFileSync('curriculum-contexts.txt','utf8').split(/\n/g)
 
 	let loadedSchemas = schemas.map(
 		schema => editorCurriculum.loadContextFromFile(
-			'curriculum-'+schema, 
-			'./editor/curriculum-'+schema+'/context.json'
+			schema, 
+			'./editor/'+schema+'/context.json'
 		)
 	)
 
