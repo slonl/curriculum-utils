@@ -11,12 +11,9 @@ update() {
     # get contexts from file
     while read context; do
     	echo "editor/${context}";
-    	 cd "editor/${context}"
-    	 "${GIT}" pull
+   	"${GIT}" -C "editor/${context}" pull
     	echo "master/${context}";
-    	 cd "../../master/${context}"
-    	 "${GIT}" pull
-    	 cd ../../ 
+    	"${GIT}" -C "master/${context}" pull
     done < curriculum-contexts.txt
 }
 
