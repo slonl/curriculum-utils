@@ -11,9 +11,17 @@ update() {
     # get contexts from file
     while read context; do
     	echo "editor/${context}";
-   	"${GIT}" -C "editor/${context}" pull
+      "${GIT}" -C "editor/${context}" pull
+      echo "copying editor/${context} context and schema to master/${context}";
+      cp "editor/${context}/context.json" "master/${context}/"
+      cp "editor/${context}/schema.jsonld" "master/${context}/"
+      echo "successfull copy from editor/${context} to master/${context}";
     	echo "master/${context}";
     	"${GIT}" -C "master/${context}" pull
+      echo "copying master/${context} data to editor/${context}";
+      cp "master/${context}/data"/* "editor/${context}/data"
+      cp "master/${context}/data"/* "editor/${context}/data"
+      echo "successfull copy from master/${context} to editor/${context}";
     done < curriculum-contexts.txt
 }
 
