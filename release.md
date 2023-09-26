@@ -14,6 +14,12 @@ Then cd to it and initialize it:
 > ./init.sh
 ```
 
+Or if already initialized, run the update script:
+
+```
+> ./update.sh
+```
+
 This will load all configured curriculum repositories. If you need to add a curriculum repository, edit the file `curriculum-contexts.txt`.
 
 Then test if all the to-be-released data is valid.
@@ -41,7 +47,7 @@ Then test if the release data is valid:
 If there are no problems, commit and push all `master/` git repositories.
 
 ```
-> cd master/curriculum-basis/
+> cd release/curriculum-basis/
 > git commit -a
 > git push
 ```
