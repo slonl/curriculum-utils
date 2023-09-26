@@ -10,12 +10,14 @@ set -o pipefail # Return exit status of the last command in the pipe that exited
 init() {
     mkdir -p master
     mkdir -p editor
+    mkdir -p release
     # get origin url
     local origin="$(git config --get remote.origin.url)"
     local root="${origin%/*}"
     # get contexts from file
     while read context; do
     	 "${GIT}" clone --single-branch "${root}/${context}" "master/${context}" 
+    	 "${GIT}" clone --single-branch "${root}/${context}" "release/${context}" 
     	 "${GIT}" clone --single-branch -b editor "${root}/${context}" "editor/${context}"
     done < curriculum-contexts.txt
 }
