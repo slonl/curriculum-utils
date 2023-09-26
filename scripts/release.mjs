@@ -30,6 +30,15 @@ async function release() {
             return masterCurriculum.index.id[entityId];
         }
 
+        // mark curriculum-samenhang tags all as unreleased so that
+        // they won't ever get new uuid's
+        for (let t of editorCurriculum.schema['curriculum-samenhang'].tag) {
+            t.unreleased = true
+        }
+        for (let t of editorCurriculum.data.tag) {
+            t.unreleased = true
+        }
+
         // search for all deleted entities
         // and move them to deprecated
         // and remove them from all other entities
