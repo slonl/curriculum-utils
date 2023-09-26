@@ -5,7 +5,7 @@ import fs from 'fs'
 async function release() {
 
     // create new curriculum instances
-    const curriculum = new Curriculum()
+    const editorCurriculum = new Curriculum()
     const masterCurriculum = new Curriculum()
 
     // read the list of all contexts from the file /curriculum-contexts.txt
@@ -16,7 +16,7 @@ async function release() {
 
     // load all contexts from the editor/ and master/ folders
     let loadedSchemas = schemas.map(
-        schema => curriculum.loadContextFromFile(schema, './editor/'+schema+'/context.json')
+        schema => editorCurriculum.loadContextFromFile(schema, './editor/'+schema+'/context.json')
     ).concat(schemas.map(
         schema => masterCurriculum.loadContextFromFile(schema, './master/'+schema+'/context.json')
     ))
@@ -42,7 +42,8 @@ async function release() {
         }).forEach(function(entity) {
             delete entity.deleted;
             console.log('deleting '+entity.id);
-            editorCurriculum.deprecate(entity);
+            // @FIXME: double check that entity is not dirty, if so get the clean entity, deprecate the clean entity
+            editorCurriculum.deprecate(entity); 
         });
 
         // search for all dirty entities, that are not unreleased
@@ -69,6 +70,8 @@ async function release() {
                     delete entity.dirty;
                     return;
                 }
+                delete entity.dirty; // this entity will be deprecated, so no longer dirty after now
+
                 var clone = editorCurriculum.clone(entity);
                 clone.id  = editorCurriculum.uuid();
                 delete clone.dirty;
@@ -92,9 +95,8 @@ async function release() {
         });
 
         schemas.forEach(function(schema) {
-            schema = 'curriculum-'+schema
             console.log('exporting '+schema);
-            editorCurriculum.exportFiles(editorCurriculum.schemas[schema], schema, 'master/'+schema+'/');
+            editorCurriculum.exportFiles(editorCurriculum.schemas[schema], schema, 'release/'+schema+'/');
         });
     })
 
