@@ -1,9 +1,17 @@
 import Curriculum from 'curriculum-js'
+import fs from 'fs'
 
 async function validate() {
 
 	var masterCurriculum = new Curriculum()
-	var schemas = [
+    // read the list of all contexts from the file /curriculum-contexts.txt
+    const schemas = fs.readFileSync('curriculum-contexts.txt','utf8')
+        .split(/\n/g)             // split the file on newlines
+        .map(line => line.trim()) // remove leading and trailing whitespace
+        .filter(Boolean)          // filter empty lines
+
+
+/*	var schemas = [
 		'basis',
 		'kerndoelen',
 		'examenprogramma',
@@ -12,13 +20,15 @@ async function validate() {
 		'leerdoelenkaarten',
 		'doelgroepteksten',
 		'erk',
-		'inhoudslijnen'
+		'inhoudslijnen',
+		'referentiekader'
 	]
+*/
 
 	let loadedSchemas = schemas.map(
 		schema => masterCurriculum.loadContextFromFile(
-			'curriculum-'+schema, 
-			'./master/curriculum-'+schema+'/context.json'
+			schema, 
+			'./release/'+schema+'/context.json'
 		)
 	)
 
