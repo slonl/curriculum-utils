@@ -8,8 +8,8 @@ set -o pipefail # Return exit status of the last command in the pipe that exited
 copy() {
     # get contexts from file
     while read context; do
-    	echo "copy master/${context}/data to editor/${context}/data";
-    	cp "master/${context}/data"/* "editor/${context}/data"
+    	echo "copy release/${context}/data to editor/${context}/data";
+    	cp "release/${context}/data"/* "editor/${context}/data"
     done < curriculum-contexts.txt
 }
 
