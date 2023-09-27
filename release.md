@@ -36,30 +36,39 @@ Then if all is well, run the release script:
 > npm run release
 ```
 
-Then copy any changes in the `context.json` files from the `editor/` to the `master/` folders.
-
+Then copy any changes in the `context.json` files from the `editor/` to the `release/` folders using the following script:
+```
+./copyContext.sh
+```
 Then test if the release data is valid:
 
 ```
 > npm run test-release
 ```
 
-If there are no problems, commit and push all `master/` git repositories.
+For advanced user: sanity check(s): if you know what the data should look like, check the differences between your local changes and the git remote:
+For example the file deprecated.json:
+```
+cd release/curriculum-basis/data/
+git diff deprecated.json
+```
 
+If there are no problems, commit and push everything in `release/` to git repository.
+For example the contents of curriculum-basis:
 ```
 > cd release/curriculum-basis/
 > git commit -a
 > git push
 ```
 
-Do this for each curriculum repository in the `master/` folder.
+Do this for each curriculum repository in the `release/` folder.
 
 Now go to github and for each curriculum repository add a new release tag for the master branch.
 
 Then copy the released data back to the editor repositories:
 
 ```
-> cp master/curriculum-basis/data/* editor/curriculum-basis/data/
+> cp release/curriculum-basis/data/* editor/curriculum-basis/data/
 ```
 
 Do this for each curriculum repository.
