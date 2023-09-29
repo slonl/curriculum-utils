@@ -99,3 +99,8 @@ Then you can check which entity this is, and show it like this:
 ```
 
 You must have `jq` installed. In Ubuntu this is done with `apt-get install jq`.
+
+## Post release checks
+
+Verify if https://opendata.slo.nl/curriculum/api/v1/ show the correct version.
+Verify if https://leerplaninbeeld.slo.nl/ is working correctly.
