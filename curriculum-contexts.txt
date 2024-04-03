@@ -1,5 +1,4 @@
 curriculum-basis
-curriculum-doelgroepteksten
 curriculum-erk
 curriculum-examenprogramma
 curriculum-examenprogramma-bg
@@ -8,6 +7,5 @@ curriculum-kerndoelen
 curriculum-leerdoelenkaarten
 curriculum-syllabus
 curriculum-referentiekader
-curriculum-niveauhierarchie
 curriculum-fo
 curriculum-samenhang
