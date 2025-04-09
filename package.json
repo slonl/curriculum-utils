@@ -12,6 +12,8 @@
   "author": "SLO",
   "license": "MIT",
   "dependencies": {
-    "curriculum-js": "^0.3.1"
+    "@muze-nl/jsontag": "^0.9.11",
+    "@muze-nl/od-jsontag": "^0.3.3",
+    "curriculum-js": "^0.4.1"
   }
 }
