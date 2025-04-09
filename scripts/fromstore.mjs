@@ -52,8 +52,13 @@ function toJSON(ob) {
 	let result = {
 	}
 	let props = ['deleted','dirty']
-	props = props.concat(Object.keys(meta.schema.types[type].properties))
-	let children = Object.values(meta.schema.types[type].children).map(c => c.label+'_id')
+	let children = []
+	if (meta.schema.types[type]?.properties) {
+		props = props.concat(Object.keys(meta.schema.types[type]?.properties))
+	}
+	if (meta.schema.types[type]?.children) {
+		children = Object.values(meta.schema.types[type].children).map(c => c.label+'_id')
+	}
 
 	const getChildren = (ob, camelCase, snake_case, force ) => {
 		if (typeof result[snake_case] !== 'undefined') {
@@ -128,11 +133,13 @@ function toJSON(ob) {
 		}
 	})
 //	console.log(meta.schema.types[type])
-	Object.entries(meta.schema.types[type].children).forEach(([childType, childDef]) => {
-		if (typeof result[childDef.label+'_id'] == 'undefined') {
-			getChildren(ob, childType, childDef.label+'_id')
-		}
-	})
+	if (meta.schema.types[type]?.children) {
+		Object.entries(meta.schema.types[type].children).forEach(([childType, childDef]) => {
+			if (typeof result[childDef.label+'_id'] == 'undefined') {
+				getChildren(ob, childType, childDef.label+'_id')
+			}
+		})
+	}
 	return result
 }
 
