@@ -116,10 +116,10 @@ console.log(cName)
 				return
 			}
 			console.log('checking '+type, curriculum.data[type]?.length)
-			curriculum.data[type].forEach(entity => {
+			curriculum.data[type]?.forEach(entity => {
 				// and test if all properties of each entity are in the schema
 				Object.keys(entity).forEach(prop => {
-					if (['replaces','replacedBy'].includes(prop)) {
+					if (['replaces','replacedBy','deleted','dirty','unreleased'].includes(prop)) {
 						return
 					}
 					if (entity[prop]==="") {
