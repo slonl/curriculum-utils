@@ -2,8 +2,9 @@ import Curriculum from 'curriculum-js'
 // load node filesystem support
 import fs from 'fs'
 import JSONTag from '@muze-nl/jsontag'
-import parse from '@muze-nl/od-jsontag/src/parse.mjs'
-import * as odJSONTag from '@muze-nl/od-jsontag/src/jsontag.mjs'
+import Parser from '@muze-nl/od-jsontag/src/parse.mjs'
+
+const parser = new Parser()
 
 const config = {
 	owner: 'slonl',
@@ -43,12 +44,12 @@ const snake_case = (camelCase) => {
 }
 
 function toJSON(ob) {
-	const type = odJSONTag.getAttribute(ob, 'class')
+	const type = JSONTag.getAttribute(ob, 'class')
 	if (!type) {
 		console.log('no type',ob)
 		process.exit()	
 	}
-	const id = getUUID(odJSONTag.getAttribute(ob, 'id'))
+	const id = getUUID(JSONTag.getAttribute(ob, 'id'))
 	let result = {
 	}
 	let props = ['deleted','dirty','replaces','replacedBy']
@@ -66,7 +67,7 @@ function toJSON(ob) {
 		}
 		if (ob[camelCase] && ob[camelCase].length) {
 			result[snake_case] = ob[camelCase].map(child => {
-				return getUUID(odJSONTag.getAttribute(child, 'id'))
+				return getUUID(JSONTag.getAttribute(child, 'id'))
 			})
 		} else if (typeof ob[camelCase] != 'undefined') {
 			if (!force && typeof ob[camelCase] == 'string' && !ob[camelCase]) {
@@ -84,11 +85,11 @@ function toJSON(ob) {
 			return
 		}
 		if (property == 'id') {
-			result.id = getUUID(odJSONTag.getAttribute(ob, 'id'))
+			result.id = getUUID(JSONTag.getAttribute(ob, 'id'))
 		}
 		if (property=='replaces' || property=='replacedBy') {
 			if (typeof ob[property] != 'undefined') {
-				result[property] = ob[property].map(e => getUUID(odJSONTag.getAttribute(e, 'id')))
+				result[property] = ob[property].map(e => getUUID(JSONTag.getAttribute(e, 'id')))
 			}
 		} else if (typeof ob[property] != 'undefined') {
 			if (!force && typeof ob[property] == 'string' && !ob[property]) {
@@ -100,7 +101,7 @@ function toJSON(ob) {
 			if (meta.schema.types[type].properties[property]?.type=='object') {
 				let snake_property = meta.schema.types[property].label+'_id'
 				console.log('property with type object',property, snake_property)
-				result[snake_property] = getUUID(odJSONTag.getAttribute(ob[property], 'id'))
+				result[snake_property] = getUUID(JSONTag.getAttribute(ob[property], 'id'))
 			} else {
 				result[property] = ob[property]
 			}
@@ -177,7 +178,7 @@ function loadDataJsontag(commandstatusfile, storepath) {
 	do {
 		console.log('reading',datafile)
 		jsontag = fs.readFileSync(datafile, 'utf8')
-		data = parse(jsontag, tempMeta, false) // tempMeta is needed to combine the resultArray, using meta conflicts with meta.index.id
+		data = parser.parse(jsontag, tempMeta, false) // tempMeta is needed to combine the resultArray, using meta conflicts with meta.index.id
 		count++
 		commandid = status.shift()
 		datafile = basefile + 'data.' + commandid + '.jsontag'
