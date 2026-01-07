@@ -51,7 +51,7 @@ function toJSON(ob) {
 	const id = getUUID(odJSONTag.getAttribute(ob, 'id'))
 	let result = {
 	}
-	let props = ['deleted','dirty']
+	let props = ['deleted','dirty','replaces','replacedBy']
 	let children = []
 	if (meta.schema.types[type]?.properties) {
 		props = props.concat(Object.keys(meta.schema.types[type]?.properties))
@@ -143,30 +143,55 @@ function toJSON(ob) {
 	return result
 }
 
+function loadCommandStatus(commandStatusFile) {
+    let status = []
+    if (fs.existsSync(commandStatusFile)) {
+        let file = fs.readFileSync(commandStatusFile, 'utf8')
+        if (file) {
+            let lines = file.split("\n").filter(Boolean) //filter clears empty lines
+            for(let line of lines) {
+                let command = JSONTag.parse(line)
+                if (command.status=='done') {
+	                status.push(command.command)
+	            }
+            }
+        } else {
+            console.error('Could not open command status',commandStatusFile)
+        }
+    } else {
+        console.log('no command status', commandStatusFile)
+    }
+    return status
+}
 
-function loadDataJsontag(datafile, schemafile) {	
+function loadDataJsontag(commandstatusfile, storepath) {	
 	let count = 0
-	let basefile = datafile
+	let basefile = storepath
 	let jsontag
 	let data = {}
 	let tempMeta = {}
+	let status = loadCommandStatus(commandstatusfile)
+	let datafile = basefile+'data.jsontag'
+	let schemafile = basefile + 'schema.jsontag'
+	let commandid
 	do {
 		console.log('reading',datafile)
-		jsontag = fs.readFileSync(datafile, 'utf-8')
-		data = parse(jsontag, tempMeta) // tempMeta is needed to combine the resultArray, using meta conflicts with meta.index.id
+		jsontag = fs.readFileSync(datafile, 'utf8')
+		data = parse(jsontag, tempMeta, false) // tempMeta is needed to combine the resultArray, using meta conflicts with meta.index.id
 		count++
-		datafile = basefile + '.' + count
+		commandid = status.shift()
+		datafile = basefile + 'data.' + commandid + '.jsontag'
 	} while(fs.existsSync(datafile))
 	meta.parts = count
 	if (schemafile) {
-		jsontag = fs.readFileSync(schemafile, 'utf-8')
+		jsontag = fs.readFileSync(schemafile, 'utf8')
 		meta.schema = JSONTag.parse(jsontag, null, tempMeta)
 	}
 	return data
 }
 
 const curriculum = new Curriculum()
-const dataspace = loadDataJsontag(process.cwd()+'/store/data.jsontag', process.cwd()+'/store/schema.jsontag')
+const dataspace = loadDataJsontag(process.cwd()+'/store/command-status.jsontag', process.cwd()+'/store/')
 
 function updateContexts() {
 	console.log('updating all contexts')
@@ -198,13 +223,14 @@ async function main() {
 		console.log('loading git',context.label)
 		schemas[context.label] = await curriculum.loadContextFromFile(
 			context.label, 
-			'master/curriculum-'+context.label+'/context.json',
+			'editor/curriculum-'+context.label+'/context.json',
 		)
 		console.log('schema loaded',context.label)
 		return true
 	}))
 	initConvertTable()
 	updateContexts()
+
 	Object.values(meta.schema.contexts).forEach(context => {
 		let schemaName = 'curriculum-'+context.label;
 		console.log('writing',schemaName,context.label)
