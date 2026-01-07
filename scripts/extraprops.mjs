@@ -28,7 +28,7 @@ async function main() {
         
 	// load all contexts from the editor/ folder
 	let loadedSchemas = schemas.map(
-		schema => curriculum.loadContextFromFile(schema, './master/'+schema+'/context.json')
+		schema => curriculum.loadContextFromFile(schema, './editor/'+schema+'/context.json')
 	)
 
 	let parsed = {}
@@ -112,7 +112,7 @@ console.log(cName)
 		// for all types
 		Object.keys(storeSchema.types).forEach(type => {
 			// read all entities
-			if (type == 'deprecated') {
+			if (type == 'deprecated' || type == 'tag') {
 				return
 			}
 			console.log('checking '+type, curriculum.data[type]?.length)
@@ -131,7 +131,7 @@ console.log(cName)
 							console.error(type+': '+entity.id+': unknown child '+prop)
 						}
 					} else if (!storeSchema.types[type].properties[prop]) {
-						console.error(type+': '+entity.id+': unknown prop '+prop)
+						console.error(type+': '+entity.id+': unknown prop '+prop+': '+entity[prop])
 					}
 				})
 			})
