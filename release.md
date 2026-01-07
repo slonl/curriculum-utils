@@ -30,6 +30,9 @@ Then test if all the to-be-released data is valid.
 
 All contexts should say `Data is valid!`. If not, fix the data first (See below.)
 
+This test does not check if there are any orphans. This needs to be checked. And any orphans (except doelniveau) that aren't root entities, must be marked deleted.
+See the orphans query at the bottom.
+
 Then if all is well, run the release script:
 
 ```
@@ -68,10 +71,8 @@ Now go to github and for each curriculum repository add a new release tag for th
 Then copy the released data back to the editor repositories:
 
 ```
-> cp release/curriculum-basis/data/* editor/curriculum-basis/data/
+> ./copy-release-data.sh
 ```
-
-Do this for each curriculum repository.
 
 Then commit and push the `editor/` curriculum repositories:
 
@@ -104,3 +105,27 @@ You must have `jq` installed. In Ubuntu this is done with `apt-get install jq`.
 
 Verify if https://opendata.slo.nl/curriculum/api/v1/ show the correct version.
 Verify if https://leerplaninbeeld.slo.nl/ is working correctly.
+
+## Orphans query
+
+```javascript
+	const Type = o => JSONTag.getAttribute(o,"class")
+	let types = Object.keys(meta.schema.types)
+	.filter(t => !meta.schema.types[t].root)
+
+	let allOrphans = []
+	for (const type of types) {
+	  let orphans = from(data[type])
+	  .filter((o) => !o.root)
+	  allOrphans = allOrphans.concat(orphans)
+	}
+
+	from(allOrphans)
+	.select({
+	  type: Type,
+	  id: _,
+	  title: _
+	})
+```
+
+Let op: timeout van 1 seconde is te kort, ophogen in query-worker-module.mjs
