@@ -39,20 +39,38 @@ async function release() {
             t.unreleased = true
         }
 
+        // for (let section of ['fo_set','fo_doelzin','fo_uitwerking','fo_illustratie']) {
+        //     for (let entity of editorCurriculum.data[section]) {
+        //         if (!entity.status) {
+        //             console.log('fixing status for ', entity.id)
+        //             entity.status = 'concept'; // TODO remove in the future
+        //         }                
+        //     }
+        // }
+
         // search for all deleted entities
         // and move them to deprecated
         // and remove them from all other entities
         // and mark those as dirty, unless unreleased
         Object.keys(editorCurriculum.index.id)
         .filter(function(entityId) {
-            return parseInt(editorCurriculum.index.id[entityId].deleted)==1;
+            return parseInt(editorCurriculum.index.id[entityId].deleted)==1 
+                || editorCurriculum.index.id[entityId].deleted===true;
         }).map(function(entityId) {
             return editorCurriculum.index.id[entityId];
         }).forEach(function(entity) {
             delete entity.deleted;
-            console.log('deleting '+entity.id);
-            // @FIXME: double check that entity is not dirty, if so get the clean entity, deprecate the clean entity
-            editorCurriculum.deprecate(entity); 
+            if (editorCurriculum.index.type[entity.id]!='niveau') {
+                // never delete niveaus in a release, use a separate script
+                // because it is almost never the right thing to do
+                //TODO: add a check that there are no active entities (not deprecated) still linking to 
+                // a .deleted entity. If so, require extra command line param --allow-active-delete
+                // otherwise skip this delete, add it to a list
+                // and show that list after this run and exit the release script
+                console.log('deleting '+entity.id);
+                // @FIXME: double check that entity is not dirty, if so get the clean entity, deprecate the clean entity
+                editorCurriculum.deprecate(entity); 
+            }
         });
 
         // search for all dirty entities, that are not unreleased
@@ -71,6 +89,10 @@ async function release() {
                     // this entity has already been deprecated
                     return;
                 }
+                // if (section === 'vakleergebied') { // temporary fix to not create new uuids for vakleergebied
+                //     delete entity.dirty
+                //     return
+                // }
                 var schemaName   = editorCurriculum.index.schema[entity.id];
                 var cleanVersion = getClean(entity.id);
                 if (!cleanVersion) {
