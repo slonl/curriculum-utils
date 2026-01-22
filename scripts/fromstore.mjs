@@ -88,8 +88,8 @@ function toJSON(ob) {
 			result.id = getUUID(JSONTag.getAttribute(ob, 'id'))
 		}
 		if (property=='replaces' || property=='replacedBy') {
-			if (typeof ob[property] != 'undefined') {
-				result[property] = ob[property].map(e => getUUID(JSONTag.getAttribute(e, 'id')))
+			if (Array.isArray(ob[property])) {
+				result[property] = ob[property].map(e => getUUID(e))
 			}
 		} else if (typeof ob[property] != 'undefined') {
 			if (!force && typeof ob[property] == 'string' && !ob[property]) {
