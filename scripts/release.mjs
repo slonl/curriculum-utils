@@ -60,6 +60,7 @@ async function release() {
             return editorCurriculum.index.id[entityId];
         }).forEach(function(entity) {
             delete entity.deleted;
+            delete entity.dirty;
             if (editorCurriculum.index.type[entity.id]!='niveau') {
                 // never delete niveaus in a release, use a separate script
                 // because it is almost never the right thing to do
