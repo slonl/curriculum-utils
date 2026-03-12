@@ -22,6 +22,32 @@ Or if already initialized, run the update script:
 
 This will load all configured curriculum repositories. If you need to add a curriculum repository, edit the file `curriculum-contexts.txt`.
 
+## update the editor branch
+
+If you need to add changes from the api-dev/ environment, create a copy of the needed files (in the api-dev/curriculum-store/ folder on the correct host machine) like this:
+
+```shell
+cd site/api-dev/curriculum-store/
+tar cvzf ~/data.backup.tgz data/* command-*.jsontag
+```
+
+Then copy that file to your working environment, on your local computer:
+
+```shell
+cd store/
+scp -P 2223 opendata.slo.nl@opendata.slo.nl:data.backup.tgz .
+tar xvzf data.backup.tgz
+mv data/* .
+```
+
+Then run the 'fromstore' script like this:
+
+```shell
+node scripts/fromstore.mjs
+```
+
+## release the editor branch
+
 Then test if all the to-be-released data is valid.
 
 ```
