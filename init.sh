@@ -15,7 +15,10 @@ init() {
     local origin="$(git config --get remote.origin.url)"
     local root="${origin%/*}"
     # get contexts from file
-    while read context; do
+    # the `|| [[ -n "${context}" ]]` handles a final line with no trailing
+    # newline: `read` returns non-zero at EOF even though it still filled
+    # ${context}, so without this the last context in the file gets skipped.
+    while read context || [[ -n "${context}" ]]; do
     	 "${GIT}" clone --single-branch "${root}/${context}" "master/${context}" 
     	 "${GIT}" clone --single-branch "${root}/${context}" "release/${context}" 
     	 "${GIT}" clone --single-branch -b editor "${root}/${context}" "editor/${context}"

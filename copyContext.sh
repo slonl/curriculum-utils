@@ -9,7 +9,10 @@ init() {
 #copy any changes in the context.json files from the editor/ to the release/ folders.
 
     # get contexts from file
-    while read context; do
+    # the `|| [[ -n "${context}" ]]` handles a final line with no trailing
+    # newline: `read` returns non-zero at EOF even though it still filled
+    # ${context}, so without this the last context in the file gets skipped.
+    while read context || [[ -n "${context}" ]]; do
     #copy context.json to release folder
       cp "editor/${context}/context.json" "release/${context}/context.json"
     done < curriculum-contexts.txt

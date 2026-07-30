@@ -9,7 +9,10 @@ set -o pipefail # Return exit status of the last command in the pipe that exited
 
 update() {
     # get contexts from file
-    while read context; do
+    # the `|| [[ -n "${context}" ]]` handles a final line with no trailing
+    # newline: `read` returns non-zero at EOF even though it still filled
+    # ${context}, so without this the last context in the file gets skipped.
+    while read context || [[ -n "${context}" ]]; do
     	echo "editor/${context}";
    	"${GIT}" -C "editor/${context}" pull
     	echo "master/${context}";
